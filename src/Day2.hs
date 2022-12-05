@@ -28,9 +28,6 @@ instance RunApp Day2 where
 class Score a where
     score :: a -> Int
 
-class FromChar a where
-    fromChar :: Char -> a
-
 data RPS
   = Rock
   | Paper
@@ -63,36 +60,38 @@ instance Score (RPS, Outcome) where
       where r = l `withOutcome` o
 
 against :: RPS -> RPS -> Outcome
-left `against` right = case (left, right) of
-    (Rock, Scissors) -> LeftWins
-    (Scissors, Paper) -> LeftWins
-    (Paper, Rock) -> LeftWins
-    (left, right) | left == right -> Draw
-    _ -> RightWins
+left `against` right
+    | left == right = Draw
+    | defeaterOf left == right = RightWins
+    | otherwise = LeftWins
 
-winsAgainst :: RPS -> RPS
-winsAgainst = \case
+defeaterOf :: RPS -> RPS
+defeaterOf = \case
     Rock -> Paper
     Paper -> Scissors
     Scissors -> Rock
 
-losesAgainst :: RPS -> RPS
-losesAgainst = \case
+loserOf :: RPS -> RPS
+loserOf = \case
     Rock -> Scissors
     Paper -> Rock
     Scissors -> Paper
 
 withOutcome :: RPS -> Outcome -> RPS
 withOutcome left = \case
-    LeftWins -> losesAgainst left
+    LeftWins -> loserOf left
     Draw -> left
-    RightWins -> winsAgainst left
+    RightWins -> defeaterOf left
+
+class FromChar a where
+    fromChar :: Char -> a
 
 instance FromChar RPS where
-    fromChar c | c `elem` ['A', 'X'] = Rock
-               | c `elem` ['B', 'Y'] = Paper
-               | c `elem` ['C', 'Z'] = Scissors
-               | otherwise = error ("invalid char " ++ show c)
+    fromChar c
+        | c `elem` ['A', 'X'] = Rock
+        | c `elem` ['B', 'Y'] = Paper
+        | c `elem` ['C', 'Z'] = Scissors
+        | otherwise = error ("invalid char " ++ show c)
 
 instance FromChar Outcome where
     fromChar = \case
